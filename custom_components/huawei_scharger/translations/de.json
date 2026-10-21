@@ -1,0 +1,153 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Mit FusionSolar verbinden",
+        "description": "Zugangsdaten des FusionSolar-Webportals. Ein eigener (nur lesender) Benutzer wird empfohlen, da sich parallele Anmeldungen mit demselben Benutzer gegenseitig abmelden.",
+        "data": {
+          "username": "Benutzername",
+          "password": "Passwort",
+          "host": "Portal-Host"
+        },
+        "data_description": {
+          "host": "Regions-Host des Portals, z. B. eu5.fusionsolar.huawei.com"
+        }
+      },
+      "station": {
+        "title": "Anlage wählen",
+        "description": "Dieses Konto hat mehrere Anlagen. Die Anlage mit der Wallbox wählen.",
+        "data": {
+          "station_dn": "Anlage"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Erneut anmelden",
+        "description": "FusionSolar hat die gespeicherte Anmeldung abgelehnt oder ein Captcha verlangt. Zugangsdaten erneut eingeben (bei Captcha vorher einmal im Browser anmelden und einige Minuten warten).",
+        "data": {
+          "username": "Benutzername",
+          "password": "Passwort"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Benutzername oder Passwort ungültig.",
+      "captcha_required": "FusionSolar verlangt für dieses Konto ein Captcha. Einmal im Browser anmelden, einige Minuten warten und erneut versuchen (ein eigener FusionSolar-Benutzer für Home Assistant hilft).",
+      "cannot_connect": "FusionSolar-Portal nicht erreichbar oder unerwartete Antwort.",
+      "no_station": "Für dieses Konto wurde keine Anlage gefunden.",
+      "no_charger": "In dieser Anlage wurde keine SCharger-Wallbox gefunden.",
+      "unknown": "Unerwarteter Fehler, siehe Protokoll."
+    },
+    "abort": {
+      "already_configured": "Diese Anlage ist bereits eingerichtet.",
+      "reauth_successful": "Erneute Anmeldung erfolgreich."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Abfrage",
+        "data": {
+          "scan_interval": "Abfrageintervall (Sekunden, mindestens 30)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "power": {
+        "name": "Ladeleistung"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "charging": "Lädt",
+          "idle": "Bereit"
+        }
+      },
+      "energy_total": {
+        "name": "Geladen gesamt"
+      },
+      "working_status": {
+        "name": "Fahrzeug"
+      },
+      "working_mode": {
+        "name": "Arbeitsmodus (gemeldet)"
+      },
+      "lock_state": {
+        "name": "Steckerverriegelung"
+      },
+      "reported_status": {
+        "name": "Gemeldeter Status"
+      },
+      "data_time": {
+        "name": "Datenstand"
+      },
+      "current_l1": {
+        "name": "Strom L1"
+      },
+      "current_l2": {
+        "name": "Strom L2"
+      },
+      "current_l3": {
+        "name": "Strom L3"
+      },
+      "temperature": {
+        "name": "Temperatur"
+      },
+      "dynamic_power": {
+        "name": "Dynamische Ladeleistung"
+      },
+      "max_power": {
+        "name": "Maximale Ladeleistung"
+      },
+      "co2_avoided": {
+        "name": "CO2 vermieden"
+      },
+      "standard_coal_saved": {
+        "name": "Eingesparte Standardkohle"
+      },
+      "equivalent_trees": {
+        "name": "Entsprechend gepflanzte Bäume"
+      }
+    },
+    "number": {
+      "dynamic_power_limit": {
+        "name": "Max. dynamische Leistung"
+      },
+      "max_charge_current": {
+        "name": "Max. Ladestrom"
+      },
+      "grid_share_pv_mode": {
+        "name": "Netzanteil im PV-Modus"
+      },
+      "surplus_start_threshold": {
+        "name": "Überschuss-Startschwelle"
+      }
+    },
+    "select": {
+      "working_mode_setting": {
+        "name": "Lademodus",
+        "state": {
+          "normal": "Normal laden",
+          "pv_preferred": "Ökostrom bevorzugt"
+        }
+      },
+      "lock_mode": {
+        "name": "Verriegelungsmodus",
+        "state": {
+          "always": "Immer verriegeln",
+          "while_charging": "Verriegeln beim Laden",
+          "after_plug_in": "Verriegeln nach dem Einstecken"
+        }
+      }
+    },
+    "switch": {
+      "dynamic_power_enabled": {
+        "name": "Dynamische Ladeleistung"
+      },
+      "phase_switching": {
+        "name": "Phasenumschaltung"
+      }
+    }
+  }
+}

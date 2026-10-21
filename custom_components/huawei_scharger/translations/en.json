@@ -1,0 +1,153 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to FusionSolar",
+        "description": "Credentials of your FusionSolar web portal account. A separate (read-only) user is recommended, because parallel logins with the same user log each other out.",
+        "data": {
+          "username": "Username",
+          "password": "Password",
+          "host": "Portal host"
+        },
+        "data_description": {
+          "host": "Region host of the portal, e.g. eu5.fusionsolar.huawei.com"
+        }
+      },
+      "station": {
+        "title": "Select plant",
+        "description": "This account has several plants. Choose the one with the wallbox.",
+        "data": {
+          "station_dn": "Plant"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Log in again",
+        "description": "FusionSolar rejected the stored login or asked for a captcha. Enter the credentials again (if a captcha was requested, log in once in a browser and wait a few minutes first).",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid username or password.",
+      "captcha_required": "FusionSolar requires a captcha for this account. Log in once in a web browser, wait a few minutes and try again (a separate FusionSolar user for Home Assistant helps).",
+      "cannot_connect": "Cannot reach the FusionSolar portal or unexpected answer.",
+      "no_station": "No plant found for this account.",
+      "no_charger": "No SCharger wallbox found in this plant.",
+      "unknown": "Unexpected error, see the log."
+    },
+    "abort": {
+      "already_configured": "This plant is already configured.",
+      "reauth_successful": "Re-authentication successful."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Polling",
+        "data": {
+          "scan_interval": "Polling interval (seconds, minimum 30)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "power": {
+        "name": "Charging power"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "charging": "Charging",
+          "idle": "Idle"
+        }
+      },
+      "energy_total": {
+        "name": "Total energy charged"
+      },
+      "working_status": {
+        "name": "Vehicle"
+      },
+      "working_mode": {
+        "name": "Working mode (reported)"
+      },
+      "lock_state": {
+        "name": "Connector lock"
+      },
+      "reported_status": {
+        "name": "Reported status"
+      },
+      "data_time": {
+        "name": "Data timestamp"
+      },
+      "current_l1": {
+        "name": "Current L1"
+      },
+      "current_l2": {
+        "name": "Current L2"
+      },
+      "current_l3": {
+        "name": "Current L3"
+      },
+      "temperature": {
+        "name": "Temperature"
+      },
+      "dynamic_power": {
+        "name": "Dynamic charging power"
+      },
+      "max_power": {
+        "name": "Maximum charging power"
+      },
+      "co2_avoided": {
+        "name": "CO2 avoided"
+      },
+      "standard_coal_saved": {
+        "name": "Standard coal saved"
+      },
+      "equivalent_trees": {
+        "name": "Equivalent trees planted"
+      }
+    },
+    "number": {
+      "dynamic_power_limit": {
+        "name": "Dynamic power limit"
+      },
+      "max_charge_current": {
+        "name": "Maximum charging current"
+      },
+      "grid_share_pv_mode": {
+        "name": "Grid power in PV mode"
+      },
+      "surplus_start_threshold": {
+        "name": "Surplus start threshold"
+      }
+    },
+    "select": {
+      "working_mode_setting": {
+        "name": "Working mode",
+        "state": {
+          "normal": "Normal charge",
+          "pv_preferred": "PV power preferred"
+        }
+      },
+      "lock_mode": {
+        "name": "Locking mode",
+        "state": {
+          "always": "Always locked",
+          "while_charging": "Locked while charging",
+          "after_plug_in": "Locked after plug-in"
+        }
+      }
+    },
+    "switch": {
+      "dynamic_power_enabled": {
+        "name": "Dynamic charging power"
+      },
+      "phase_switching": {
+        "name": "Automatic phase switching"
+      }
+    }
+  }
+}

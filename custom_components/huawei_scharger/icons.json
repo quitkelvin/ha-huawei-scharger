@@ -1,0 +1,37 @@
+{
+  "entity": {
+    "sensor": {
+      "power": {"default": "mdi:ev-station"},
+      "status": {"default": "mdi:ev-plug-type2", "state": {"charging": "mdi:battery-charging", "idle": "mdi:power-sleep"}},
+      "energy_total": {"default": "mdi:counter"},
+      "working_status": {"default": "mdi:car-electric"},
+      "working_mode": {"default": "mdi:leaf"},
+      "lock_state": {"default": "mdi:lock-outline"},
+      "reported_status": {"default": "mdi:information-outline"},
+      "data_time": {"default": "mdi:clock-outline"},
+      "current_l1": {"default": "mdi:current-ac"},
+      "current_l2": {"default": "mdi:current-ac"},
+      "current_l3": {"default": "mdi:current-ac"},
+      "temperature": {"default": "mdi:thermometer"},
+      "dynamic_power": {"default": "mdi:tune-variant"},
+      "max_power": {"default": "mdi:speedometer"},
+      "co2_avoided": {"default": "mdi:molecule-co2"},
+      "standard_coal_saved": {"default": "mdi:mine"},
+      "equivalent_trees": {"default": "mdi:tree"}
+    },
+    "number": {
+      "dynamic_power_limit": {"default": "mdi:tune-variant"},
+      "max_charge_current": {"default": "mdi:current-ac"},
+      "grid_share_pv_mode": {"default": "mdi:transmission-tower"},
+      "surplus_start_threshold": {"default": "mdi:solar-power-variant"}
+    },
+    "select": {
+      "working_mode_setting": {"default": "mdi:leaf"},
+      "lock_mode": {"default": "mdi:lock-outline"}
+    },
+    "switch": {
+      "dynamic_power_enabled": {"default": "mdi:tune"},
+      "phase_switching": {"default": "mdi:swap-horizontal"}
+    }
+  }
+}
