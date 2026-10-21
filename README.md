@@ -96,3 +96,5 @@ Login code adapted from Home-Assistant-FusionSolar-App by Henrique Craveiro, MIT
 ## License
 
 MIT – see [LICENSE](LICENSE).
+
+Third-party license texts: see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
