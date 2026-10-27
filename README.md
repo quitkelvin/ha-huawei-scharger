@@ -46,6 +46,31 @@ FusionSolar has no documented remote start/stop command. In practice the working
 
 Tested: switching to *Normal charge* started charging within about a minute, switching back stopped it immediately.
 
+## Charging modes, fixed amount and time window (example package)
+
+`examples/charging_modes/` contains a ready-to-use **package** plus a **small dashboard** (core cards only):
+
+| Mode | What it does |
+|---|---|
+| **Solar** | PV power preferred – charges from solar surplus only (start threshold / grid share as set on the charger) |
+| **After battery** | solar surplus, but only after the home battery has reached e.g. 95 % (summer) |
+| **Home battery** | normal mode with limited power (default 6 kW) so the home battery covers it; at the battery limit either continue from the grid at full power or stop |
+| **Adjustable** | normal mode with a power of your choice (4.1–11 kW) |
+| **Maximum** | normal mode at full power |
+
+Every mode stops after a chosen **amount (kWh)** or when the car is unplugged. An optional **daily time window**
+(from–to) starts the selected mode automatically and stops it at the end – e.g. *Solar 10–17 h* or *8 kWh with 4.1 kW at night*.
+After a session the charger goes back to *PV power preferred*; the grid share in PV mode is set to 0 until 09:00 so it
+does not keep charging from the grid at night.
+
+**Your own sensors:** the package uses text helpers named *EV · entity …* for every entity it needs (charger entities and
+your home battery's state-of-charge sensor). Change them under *Settings → Devices & services → Helpers* – no YAML editing.
+The defaults match this integration with the device name *Huawei SCharger* in English. Recommended starting values:
+amount 100 kWh (= unlimited), home-battery power 6 kW, battery limit 10 %, start after battery 95 %.
+
+Setup: enable packages (`homeassistant: packages: !include_dir_named packages`), copy
+`huawei_scharger_charging_modes.yaml` into `config/packages/`, restart, then add the card from `dashboard.yaml`.
+
 ## Installation
 
 1. HACS → Custom repositories → add `https://github.com/quitkelvin/ha-huawei-scharger`

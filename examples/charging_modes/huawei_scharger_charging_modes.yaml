@@ -1,0 +1,366 @@
+# Huawei SCharger – charging modes, fixed amount and time window (example package)
+#
+# Copy this file to config/packages/ (packages must be enabled:
+#   homeassistant:
+#     packages: !include_dir_named packages
+# ) and restart Home Assistant. All entities you need to adapt are plain text helpers
+# ("EV · entity …") – change them in Settings → Devices & services → Helpers, no YAML editing.
+#
+# Charging modes
+#   Solar           – working mode "PV power preferred" (surplus only; start threshold / grid share as set on the charger)
+#   After battery   – solar surplus, but only once the home battery has reached "EV · start after home battery %"
+#                     (until then the start threshold is raised to 22 kW so the charger never starts)
+#   Home battery    – "Normal" with a limited power (default 6 kW) so the home battery can cover it; when the battery
+#                     reaches "EV · use home battery down to %" it either continues from the grid at full power or stops
+#   Adjustable      – "Normal" with the power you choose (4.1–11 kW)
+#   Maximum         – "Normal" at the charger's maximum
+# Every mode stops after "EV · amount" kWh (100 = practically unlimited) or when the car is unplugged.
+# Optional daily time window: starts the selected mode at "from" and stops at "to".
+# When a session ends: back to "PV power preferred", grid share in PV mode set to 0 until 09:00 (otherwise the charger
+# may continue at night with the allowed grid share), then restored.
+
+input_text:
+  ev_ent_mode:
+    name: EV · entity working mode (select)
+    initial: select.huawei_scharger_working_mode
+  ev_ent_power_limit:
+    name: EV · entity dynamic power limit (number, kW)
+    initial: number.huawei_scharger_dynamic_power_limit
+  ev_ent_current:
+    name: EV · entity maximum charging current (number, A)
+    initial: number.huawei_scharger_maximum_charging_current
+  ev_ent_grid_share:
+    name: EV · entity grid power in PV mode (number, kW)
+    initial: number.huawei_scharger_grid_power_in_pv_mode
+  ev_ent_threshold:
+    name: EV · entity surplus start threshold (number, kW)
+    initial: number.huawei_scharger_surplus_start_threshold
+  ev_ent_energy:
+    name: EV · entity total energy charged (sensor, kWh)
+    initial: sensor.huawei_scharger_total_energy_charged
+  ev_ent_vehicle:
+    name: EV · entity vehicle status (sensor)
+    initial: sensor.huawei_scharger_vehicle
+  ev_ent_battery_soc:
+    name: EV · entity home battery state of charge (sensor, %)
+    initial: sensor.battery_state_of_capacity
+  ev_notify:
+    name: EV · notify service (e.g. notify.mobile_app_my_phone, empty = none)
+    initial: ""
+
+input_select:
+  ev_mode:
+    name: EV · charging mode
+    options: [Solar, After battery, Home battery, Adjustable, Maximum]
+    icon: mdi:ev-station
+
+input_number:
+  ev_amount:
+    name: EV · amount
+    min: 1
+    max: 100
+    step: 1
+    unit_of_measurement: kWh
+    icon: mdi:car-battery
+    mode: slider
+  ev_power:
+    name: EV · power (Adjustable)
+    min: 4.1
+    max: 11
+    step: 0.1
+    unit_of_measurement: kW
+    mode: slider
+  ev_max_power:
+    name: EV · charger maximum
+    min: 3.7
+    max: 22
+    step: 0.1
+    initial: 11
+    unit_of_measurement: kW
+    mode: box
+  ev_battery_power:
+    name: EV · power (Home battery)
+    min: 4.1
+    max: 11
+    step: 0.1
+    unit_of_measurement: kW
+    mode: slider
+  ev_battery_min:
+    name: EV · use home battery down to
+    min: 5
+    max: 90
+    step: 5
+    unit_of_measurement: "%"
+    mode: slider
+  ev_battery_full:
+    name: EV · start after home battery
+    min: 50
+    max: 100
+    step: 5
+    unit_of_measurement: "%"
+    mode: slider
+  ev_start_energy:
+    name: EV · counter at start
+    min: 0
+    max: 10000000
+    step: 0.01
+    unit_of_measurement: kWh
+    mode: box
+  ev_grid_share_before:
+    name: EV · grid share before
+    min: 0
+    max: 22
+    step: 0.1
+    unit_of_measurement: kW
+    mode: box
+  ev_threshold_before:
+    name: EV · start threshold before
+    min: 0.5
+    max: 22
+    step: 0.1
+    unit_of_measurement: kW
+    mode: box
+
+input_boolean:
+  ev_active:
+    name: EV · session running
+    icon: mdi:ev-station
+  ev_then_grid:
+    name: EV · after home battery continue from grid
+    icon: mdi:transmission-tower-import
+  ev_window:
+    name: EV · only in time window (daily)
+    icon: mdi:clock-time-four-outline
+  ev_grid_locked:
+    name: EV · grid share temporarily 0
+  ev_threshold_locked:
+    name: EV · start threshold temporarily raised
+
+input_datetime:
+  ev_from:
+    name: EV · from
+    has_date: false
+    has_time: true
+  ev_to:
+    name: EV · to
+    has_date: false
+    has_time: true
+
+template:
+  - sensor:
+      - name: "EV · charged this session"
+        unique_id: ev_charged_this_session
+        unit_of_measurement: kWh
+        icon: mdi:car-electric
+        state: >
+          {{ ([states(states('input_text.ev_ent_energy')) | float(0) - states('input_number.ev_start_energy') | float(0), 0] | max) | round(1)
+             if is_state('input_boolean.ev_active', 'on') else 0 }}
+
+script:
+  ev_start:
+    alias: "EV · start charging"
+    icon: mdi:play-circle-outline
+    mode: single
+    sequence:
+      - if:
+          - condition: state
+            entity_id: input_boolean.ev_grid_locked
+            state: "on"
+        then:
+          - action: number.set_value
+            target: {entity_id: "{{ states('input_text.ev_ent_grid_share') }}"}
+            data: {value: "{{ states('input_number.ev_grid_share_before') | float(0) }}"}
+          - action: input_boolean.turn_off
+            target: {entity_id: input_boolean.ev_grid_locked}
+      - action: input_number.set_value
+        target: {entity_id: input_number.ev_start_energy}
+        data: {value: "{{ states(states('input_text.ev_ent_energy')) | float(0) }}"}
+      - action: input_boolean.turn_on
+        target: {entity_id: input_boolean.ev_active}
+      - action: script.ev_apply
+
+  ev_apply:
+    alias: "EV · apply charging mode"
+    mode: restart
+    sequence:
+      - variables:
+          mode: "{{ states('input_select.ev_mode') }}"
+          kw: >
+            {{ {'Home battery': states('input_number.ev_battery_power') | float(6), 'Maximum': states('input_number.ev_max_power') | float(11),
+                'Adjustable': states('input_number.ev_power') | float(9)}.get(mode, states('input_number.ev_max_power') | float(11)) }}
+          hold: >
+            {{ mode == 'After battery' and states(states('input_text.ev_ent_battery_soc')) | float(0) < states('input_number.ev_battery_full') | float(95) }}
+      - action: number.set_value
+        target: {entity_id: "{{ states('input_text.ev_ent_current') }}"}
+        data: {value: 32}
+      - action: number.set_value
+        target: {entity_id: "{{ states('input_text.ev_ent_power_limit') }}"}
+        data: {value: "{{ kw }}"}
+      - if:
+          - condition: template
+            value_template: "{{ hold and is_state('input_boolean.ev_threshold_locked', 'off') }}"
+        then:
+          - action: input_number.set_value
+            target: {entity_id: input_number.ev_threshold_before}
+            data: {value: "{{ states(states('input_text.ev_ent_threshold')) | float(1) }}"}
+          - action: number.set_value
+            target: {entity_id: "{{ states('input_text.ev_ent_threshold') }}"}
+            data: {value: 22}
+          - action: input_boolean.turn_on
+            target: {entity_id: input_boolean.ev_threshold_locked}
+      - if:
+          - condition: template
+            value_template: "{{ not hold and is_state('input_boolean.ev_threshold_locked', 'on') }}"
+        then:
+          - action: script.ev_release_threshold
+      - action: select.select_option
+        target: {entity_id: "{{ states('input_text.ev_ent_mode') }}"}
+        data: {option: "{{ 'pv_preferred' if mode in ['Solar', 'After battery'] else 'normal' }}"}
+
+  ev_release_threshold:
+    alias: "EV · restore start threshold"
+    mode: single
+    sequence:
+      - action: number.set_value
+        target: {entity_id: "{{ states('input_text.ev_ent_threshold') }}"}
+        data: {value: "{{ states('input_number.ev_threshold_before') | float(1) }}"}
+      - action: input_boolean.turn_off
+        target: {entity_id: input_boolean.ev_threshold_locked}
+
+  ev_stop:
+    alias: "EV · stop charging"
+    icon: mdi:stop-circle-outline
+    mode: single
+    sequence:
+      - if:
+          - condition: state
+            entity_id: input_boolean.ev_grid_locked
+            state: "off"
+        then:
+          - action: input_number.set_value
+            target: {entity_id: input_number.ev_grid_share_before}
+            data: {value: "{{ states(states('input_text.ev_ent_grid_share')) | float(0) }}"}
+      - action: number.set_value
+        target: {entity_id: "{{ states('input_text.ev_ent_grid_share') }}"}
+        data: {value: 0}
+      - action: input_boolean.turn_on
+        target: {entity_id: input_boolean.ev_grid_locked}
+      - action: select.select_option
+        target: {entity_id: "{{ states('input_text.ev_ent_mode') }}"}
+        data: {option: pv_preferred}
+      - action: number.set_value
+        target: {entity_id: "{{ states('input_text.ev_ent_power_limit') }}"}
+        data: {value: "{{ states('input_number.ev_max_power') | float(11) }}"}
+      - if:
+          - condition: state
+            entity_id: input_boolean.ev_threshold_locked
+            state: "on"
+        then:
+          - action: script.ev_release_threshold
+      - variables:
+          amount: "{{ states('sensor.ev_charged_this_session') }}"
+      - action: input_boolean.turn_off
+        target: {entity_id: input_boolean.ev_active}
+      - if:
+          - condition: template
+            value_template: "{{ states('input_text.ev_notify') | length > 7 }}"
+        then:
+          - action: "{{ states('input_text.ev_notify') }}"
+            data:
+              title: "Car charged"
+              message: "{{ amount }} kWh – charger back to PV mode."
+            continue_on_error: true
+
+automation:
+  - id: ev_charging_modes
+    alias: "EV · amount reached / battery limits / unplugged / time window"
+    mode: queued
+    triggers:
+      - trigger: template
+        value_template: >
+          {{ is_state('input_boolean.ev_active', 'on') and
+             states(states('input_text.ev_ent_energy')) | float(0) - states('input_number.ev_start_energy') | float(0) >= states('input_number.ev_amount') | float(999) }}
+        id: amount
+      - trigger: template
+        value_template: >
+          {{ is_state('input_boolean.ev_active', 'on') and is_state('input_select.ev_mode', 'Home battery') and
+             states(states('input_text.ev_ent_battery_soc')) | float(100) <= states('input_number.ev_battery_min') | float(0) }}
+        for: "00:03:00"
+        id: battery_empty
+      - trigger: template
+        value_template: >
+          {{ is_state('input_boolean.ev_active', 'on') and is_state('input_select.ev_mode', 'After battery') and
+             states(states('input_text.ev_ent_battery_soc')) | float(0) >= states('input_number.ev_battery_full') | float(95) }}
+        id: battery_full
+      - trigger: template
+        value_template: "{{ states(states('input_text.ev_ent_vehicle')) == 'No Car Connected' }}"
+        for: "00:02:00"
+        id: unplugged
+      - trigger: state
+        entity_id: [input_select.ev_mode, input_number.ev_power, input_number.ev_battery_power, input_number.ev_battery_full]
+        id: changed
+      - trigger: time
+        at: input_datetime.ev_from
+        id: window_start
+      - trigger: time
+        at: input_datetime.ev_to
+        id: window_end
+      - trigger: time
+        at: "09:00:00"
+        id: morning
+    actions:
+      - choose:
+          - conditions:
+              - condition: trigger
+                id: window_start
+              - condition: state
+                entity_id: input_boolean.ev_window
+                state: "on"
+              - condition: state
+                entity_id: input_boolean.ev_active
+                state: "off"
+            sequence:
+              - action: script.ev_start
+          - conditions:
+              - condition: trigger
+                id: [changed, battery_full]
+              - condition: state
+                entity_id: input_boolean.ev_active
+                state: "on"
+            sequence:
+              - action: script.ev_apply
+          - conditions:
+              - condition: trigger
+                id: battery_empty
+              - condition: state
+                entity_id: input_boolean.ev_then_grid
+                state: "on"
+            sequence:
+              - action: number.set_value
+                target: {entity_id: "{{ states('input_text.ev_ent_power_limit') }}"}
+                data: {value: "{{ states('input_number.ev_max_power') | float(11) }}"}
+          - conditions:
+              - condition: trigger
+                id: [amount, battery_empty, unplugged, window_end]
+              - condition: state
+                entity_id: input_boolean.ev_active
+                state: "on"
+              - condition: template
+                value_template: "{{ trigger.id != 'window_end' or is_state('input_boolean.ev_window', 'on') }}"
+            sequence:
+              - action: script.ev_stop
+          - conditions:
+              - condition: trigger
+                id: morning
+              - condition: state
+                entity_id: input_boolean.ev_grid_locked
+                state: "on"
+              - condition: state
+                entity_id: input_boolean.ev_active
+                state: "off"
+            sequence:
+              - action: number.set_value
+                target: {entity_id: "{{ states('input_text.ev_ent_grid_share') }}"}
+                data: {value: "{{ states('input_number.ev_grid_share_before') | float(0) }}"}
+              - action: input_boolean.turn_off
+                target: {entity_id: input_boolean.ev_grid_locked}

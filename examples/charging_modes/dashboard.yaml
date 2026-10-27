@@ -1,0 +1,59 @@
+# Small dashboard for the charging modes package (core cards only – paste into a dashboard via "Edit → Raw configuration editor"
+# or as a manual card). Shows only the settings that belong to the selected mode.
+type: vertical-stack
+cards:
+  - type: tile
+    entity: sensor.huawei_scharger_charging_power
+    name: Wallbox
+    features_position: bottom
+  - type: entities
+    title: Charge the car
+    show_header_toggle: false
+    entities:
+      - entity: input_select.ev_mode
+        name: Mode
+      - entity: input_number.ev_amount
+        name: Amount (100 = unlimited)
+      - type: conditional
+        conditions: [{entity: input_select.ev_mode, state: After battery}]
+        row: {entity: input_number.ev_battery_full, name: Start when home battery reaches}
+      - type: conditional
+        conditions: [{entity: input_select.ev_mode, state: Home battery}]
+        row: {entity: input_number.ev_battery_power, name: Power from home battery}
+      - type: conditional
+        conditions: [{entity: input_select.ev_mode, state: Home battery}]
+        row: {entity: input_number.ev_battery_min, name: Use home battery down to}
+      - type: conditional
+        conditions: [{entity: input_select.ev_mode, state: Home battery}]
+        row: {entity: input_boolean.ev_then_grid, name: Then continue from grid at full power}
+      - type: conditional
+        conditions: [{entity: input_select.ev_mode, state: Adjustable}]
+        row: {entity: input_number.ev_power, name: Power}
+      - type: conditional
+        conditions: [{entity: input_select.ev_mode, state: Solar}]
+        row: {entity: number.huawei_scharger_surplus_start_threshold, name: Start at surplus}
+      - type: conditional
+        conditions: [{entity: input_select.ev_mode, state: Solar}]
+        row: {entity: number.huawei_scharger_grid_power_in_pv_mode, name: Allowed grid power}
+      - type: divider
+      - entity: input_boolean.ev_window
+        name: Only in time window (daily)
+      - type: conditional
+        conditions: [{entity: input_boolean.ev_window, state: "on"}]
+        row: {entity: input_datetime.ev_from, name: From}
+      - type: conditional
+        conditions: [{entity: input_boolean.ev_window, state: "on"}]
+        row: {entity: input_datetime.ev_to, name: To}
+      - type: divider
+      - entity: sensor.ev_charged_this_session
+        name: Charged this session
+      - type: buttons
+        entities:
+          - entity: script.ev_start
+            name: Start
+            icon: mdi:play-circle-outline
+            tap_action: {action: perform-action, perform_action: script.ev_start, confirmation: {text: "Start charging with the selected mode?"}}
+          - entity: script.ev_stop
+            name: Stop
+            icon: mdi:stop-circle-outline
+            tap_action: {action: perform-action, perform_action: script.ev_stop}
