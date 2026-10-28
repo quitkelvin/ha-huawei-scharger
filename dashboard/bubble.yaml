@@ -1,0 +1,146 @@
+# Bubble-style dashboard view (dark, rounded cards) – requires Bubble Card from HACS (Clooos/Bubble-Card, v3.2 or newer).
+# Add it as a view: Edit dashboard → ⋮ → Raw configuration editor → paste under `views:` (or copy the two cards into an existing view).
+# Tap the main card to open the pop-up (hash #wallbox). Entity IDs are the defaults for an English installation –
+# adjust them if your device or entities are named differently.
+title: Wallbox
+path: wallbox
+cards:
+- type: vertical-stack
+  cards:
+  - type: custom:bubble-card
+    card_type: separator
+    name: Wallbox
+    icon: mdi:ev-station
+  - type: custom:bubble-card
+    card_type: button
+    button_type: state
+    entity: sensor.huawei_scharger_charging_power
+    name: Charging
+    show_state: true
+    icon: mdi:ev-station
+    sub_button:
+    - entity: sensor.huawei_scharger_status
+      show_state: true
+      show_icon: true
+    - entity: sensor.huawei_scharger_vehicle
+      show_state: true
+      show_icon: true
+    tap_action:
+      action: navigate
+      navigation_path: '#wallbox'
+  - type: grid
+    columns: 2
+    square: false
+    cards:
+    - type: custom:bubble-card
+      card_type: button
+      button_type: state
+      entity: select.huawei_scharger_working_mode
+      name: Mode
+      show_state: true
+      icon: mdi:solar-power-variant
+    - type: custom:bubble-card
+      card_type: button
+      button_type: state
+      entity: sensor.huawei_scharger_total_energy_charged
+      name: Charged total
+      show_state: true
+      icon: mdi:counter
+- type: custom:bubble-card
+  card_type: pop-up
+  hash: '#wallbox'
+  popup_style: home-assistant
+  name: Wallbox
+  icon: mdi:ev-station
+  cards:
+  - type: custom:bubble-card
+    card_type: separator
+    name: Now
+    icon: mdi:flash
+  - type: custom:bubble-card
+    card_type: button
+    button_type: state
+    entity: sensor.huawei_scharger_charging_power
+    name: Power
+    show_state: true
+    icon: mdi:flash
+  - type: grid
+    columns: 3
+    square: false
+    cards:
+    - type: custom:bubble-card
+      card_type: button
+      button_type: state
+      entity: sensor.huawei_scharger_current_l1
+      name: L1
+      show_state: true
+      icon: mdi:sine-wave
+      card_layout: normal
+    - type: custom:bubble-card
+      card_type: button
+      button_type: state
+      entity: sensor.huawei_scharger_current_l2
+      name: L2
+      show_state: true
+      icon: mdi:sine-wave
+      card_layout: normal
+    - type: custom:bubble-card
+      card_type: button
+      button_type: state
+      entity: sensor.huawei_scharger_current_l3
+      name: L3
+      show_state: true
+      icon: mdi:sine-wave
+      card_layout: normal
+  - type: custom:bubble-card
+    card_type: button
+    button_type: state
+    entity: sensor.huawei_scharger_temperature
+    name: Temperature
+    show_state: true
+    icon: mdi:thermometer
+    sub_button:
+    - entity: sensor.huawei_scharger_connector_lock
+      show_state: true
+      show_icon: true
+  - type: custom:bubble-card
+    card_type: separator
+    name: Settings
+    icon: mdi:tune-variant
+  - type: custom:bubble-card
+    card_type: button
+    button_type: state
+    entity: select.huawei_scharger_working_mode
+    name: Working mode
+    show_state: true
+    icon: mdi:solar-power-variant
+  - type: custom:bubble-card
+    card_type: button
+    button_type: slider
+    entity: number.huawei_scharger_surplus_start_threshold
+    name: Start at surplus
+    show_state: true
+    icon: mdi:white-balance-sunny
+  - type: custom:bubble-card
+    card_type: button
+    button_type: slider
+    entity: number.huawei_scharger_grid_power_in_pv_mode
+    name: Grid power in PV mode
+    show_state: true
+    icon: mdi:transmission-tower
+  - type: custom:bubble-card
+    card_type: button
+    button_type: switch
+    entity: switch.huawei_scharger_dynamic_charging_power
+    name: Dynamic charging power
+    show_state: true
+    icon: mdi:speedometer
+  - type: custom:bubble-card
+    card_type: separator
+    name: History
+    icon: mdi:chart-line
+  - type: history-graph
+    title: Charging power 24 h
+    hours_to_show: 24
+    entities:
+    - entity: sensor.huawei_scharger_charging_power
