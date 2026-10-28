@@ -138,7 +138,8 @@ Einstellungen → Geräte & Dienste; Oberfläche auf Deutsch und Englisch.
 ## NOTICE
 
 Login code adapted from Home-Assistant-FusionSolar-App by Henrique Craveiro, MIT
-(https://github.com/hcraveiro/Home-Assistant-FusionSolar-App). See LICENSE.
+(https://github.com/hcraveiro/Home-Assistant-FusionSolar-App). Full license text: THIRD_PARTY_NOTICES.md.
+No other third-party code is included and no Python packages are required (manifest `requirements: []`).
 
 ## License
 

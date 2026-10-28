@@ -2,7 +2,7 @@
 
 Adapted from Home-Assistant-FusionSolar-App by Henrique Craveiro
 (https://github.com/hcraveiro/Home-Assistant-FusionSolar-App),
-Copyright (c) 2024 Henrique Craveiro, MIT License. See LICENSE.
+Copyright (c) 2024 Henrique Craveiro, MIT License. See THIRD_PARTY_NOTICES.md.
 
 Changes compared to the original: standalone class instead of a mixin, no
 background session thread (the caller re-logs in on demand), no interactive
