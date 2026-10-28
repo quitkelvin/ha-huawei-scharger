@@ -71,6 +71,12 @@ amount 100 kWh (= unlimited), home-battery power 6 kW, battery limit 10 %, start
 Setup: enable packages (`homeassistant: packages: !include_dir_named packages`), copy
 `huawei_scharger_charging_modes.yaml` into `config/packages/`, restart, then add the card from `dashboard.yaml`.
 
+## Dashboard (Bubble style)
+
+A ready-made dark dashboard view in Bubble Card style (rounded cards, pop-up with details) is in [`dashboard/bubble.yaml`](dashboard/bubble.yaml). It needs [Bubble Card](https://github.com/Clooos/Bubble-Card) (HACS, v3.2 or newer). Add it via *Edit dashboard → ⋮ → Raw configuration editor* under `views:`; entity IDs are the English defaults – adjust them if yours differ.
+
+<img src="docs/images/bubble_start.png" width="300" alt="Bubble dashboard"> <img src="docs/images/bubble_popup.png" width="300" alt="Bubble dashboard">
+
 ## Installation
 
 1. HACS → Custom repositories → add `https://github.com/quitkelvin/ha-huawei-scharger`
