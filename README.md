@@ -89,6 +89,22 @@ The session is renewed automatically when it expires. If FusionSolar asks for a 
 the integration cannot solve it: it stops and asks for re-authentication. Log in once in a
 browser with that user, wait a few minutes, then re-authenticate in Home Assistant.
 
+## Fair use
+
+The integration only reads and writes your **own** plant and wallbox, with your **own**
+FusionSolar login – the same requests the portal page sends when you use it in a browser.
+It is designed to stay gentle and never to work around restrictions:
+
+- default poll interval 60 s (minimum 30 s); plant figures only every 30 minutes,
+- at most **one login attempt every 5 minutes**,
+- HTTP 429 (too many requests) pauses polling for **15 minutes**,
+- a captcha demand or rejected credentials stop polling until you re-authenticate –
+  captchas are never solved or bypassed.
+
+Huawei has not approved this use of the portal. Check the FusionSolar terms of use for your
+account yourself; if you need an official route, ask your installer about Huawei's
+Northbound/OpenAPI access.
+
 ## Limitations
 
 - Only the first wallbox and its first connector of a plant are used.
@@ -105,6 +121,12 @@ jederzeit ändern. **Nutzung auf eigene Gefahr, keine Haftung.**
 
 Empfehlung: einen **eigenen FusionSolar-Benutzer** für Home Assistant anlegen, da sich
 parallele Anmeldungen mit demselben Benutzer gegenseitig abmelden.
+
+Rücksichtsvoll: nur eigene Anlage und eigenes Konto, Abruf standardmäßig alle 60 s,
+höchstens ein Login je 5 Minuten, bei HTTP 429 15 Minuten Pause, bei Captcha oder falschem
+Passwort Stopp bis zur Neuanmeldung (Captchas werden nie umgangen). Eine Freigabe von Huawei
+gibt es nicht – die Nutzungsbedingungen von FusionSolar bitte selbst prüfen; offizieller Weg
+ist der Northbound/OpenAPI-Zugang über den Installateur.
 
 Funktionen: Ladeleistung, Status, Geladen gesamt, Fahrzeug, Ströme L1–L3, Temperatur,
 dynamische und maximale Ladeleistung, Datenstand; Lademodus und Verriegelungsmodus (Auswahl);

@@ -9,6 +9,10 @@ class PortalUnreachable(PortalError):
     """Network problem, timeout or unexpected HTTP status."""
 
 
+class RateLimited(PortalUnreachable):
+    """The portal answered HTTP 429 (too many requests); polling should slow down."""
+
+
 class SessionInvalid(PortalError):
     """The portal rejected the session (expired cookie, login page returned)."""
 

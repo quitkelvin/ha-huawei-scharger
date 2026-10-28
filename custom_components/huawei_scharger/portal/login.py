@@ -6,7 +6,8 @@ Copyright (c) 2024 Henrique Craveiro, MIT License. See LICENSE.
 
 Changes compared to the original: standalone class instead of a mixin, no
 background session thread (the caller re-logs in on demand), no interactive
-captcha handling (a captcha demand raises ``CaptchaRequired``), redacted logging.
+captcha handling (a captcha demand raises ``CaptchaRequired``), redacted logging,
+at most one login attempt per ``_MIN_LOGIN_GAP`` seconds, HTTP 429 raises ``RateLimited``.
 """
 
 from __future__ import annotations
@@ -28,6 +29,7 @@ from .errors import (
     BadCredentials,
     CaptchaRequired,
     PortalUnreachable,
+    RateLimited,
     SessionInvalid,
     UnexpectedPayload,
 )
@@ -36,6 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 
 _TIMEOUT = 20
 _CSRF_MAX_AGE = 300
+_MIN_LOGIN_GAP = 300  # seconds between login attempts (no login storms against the portal)
 _EU5_SERVICE = "/unisess/v1/auth?service=%2Fnetecowebext%2Fhome%2Findex.html"
 _AUTH_PAGE_MARKERS = (
     "login", "sign in", "verifycode", "captcha", "dpcloud/auth",
@@ -86,6 +89,7 @@ class PortalSession:
         self.logged_in = False
         self._csrf: str | None = None
         self._csrf_at = 0.0
+        self._login_at: float | None = None
         self._lock = threading.RLock()
         self._http = self._new_http()
 
@@ -118,6 +122,10 @@ class PortalSession:
     def login(self) -> None:
         """Log in from scratch. Raises BadCredentials, CaptchaRequired, PortalUnreachable."""
         with self._lock:
+            now = time.monotonic()
+            if self._login_at is not None and now - self._login_at < _MIN_LOGIN_GAP:
+                raise PortalUnreachable("login attempted shortly before; waiting before the next one")
+            self._login_at = now
             self.close()
             try:
                 if "la5" in self.login_host or "intl" in self.login_host:
@@ -180,6 +188,8 @@ class PortalSession:
                 },
                 timeout=_TIMEOUT,
             )
+            if resp.status_code == 429:
+                raise RateLimited("login: HTTP 429")
             if resp.status_code != 200:
                 _LOGGER.debug("Login attempt answered HTTP %s", resp.status_code)
                 continue
@@ -235,6 +245,8 @@ class PortalSession:
             },
             timeout=_TIMEOUT,
         )
+        if resp.status_code == 429:
+            raise RateLimited("login: HTTP 429")
         if resp.status_code != 200:
             raise SessionInvalid(f"login failed with HTTP {resp.status_code}")
         redirect = resp.headers.get("redirect_url")
@@ -268,6 +280,8 @@ class PortalSession:
             resp = self._http.request(method, url, timeout=_TIMEOUT, **kwargs)
         except requests.RequestException as err:
             raise PortalUnreachable(f"{label}: {err.__class__.__name__}") from err
+        if resp.status_code == 429:
+            raise RateLimited(f"{label}: HTTP 429")
         if self._is_login_page(resp):
             self.logged_in = False
             raise SessionInvalid(f"{label}: session expired")

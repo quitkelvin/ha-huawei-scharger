@@ -6,6 +6,7 @@ from .errors import (
     ChargerNotFound,
     PortalError,
     PortalUnreachable,
+    RateLimited,
     SessionInvalid,
     UnexpectedPayload,
 )
@@ -23,6 +24,7 @@ __all__ = [
     "PortalError",
     "PortalSession",
     "PortalUnreachable",
+    "RateLimited",
     "SChargerClient",
     "SessionInvalid",
     "UnexpectedPayload",

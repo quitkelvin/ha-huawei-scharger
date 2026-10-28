@@ -17,10 +17,14 @@ from .portal import (
     ChargerNotFound,
     ChargerReading,
     PortalError,
+    RateLimited,
     SChargerClient,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+# pause after HTTP 429 from the portal before polling again
+RATE_LIMIT_PAUSE = timedelta(minutes=15)
 
 
 class SChargerCoordinator(DataUpdateCoordinator[ChargerReading]):
@@ -38,10 +42,16 @@ class SChargerCoordinator(DataUpdateCoordinator[ChargerReading]):
             update_interval=timedelta(seconds=seconds),
         )
         self.client = client
+        self._normal_interval = timedelta(seconds=seconds)
 
     async def _async_update_data(self) -> ChargerReading:
         try:
-            return await self.hass.async_add_executor_job(self.client.read)
+            reading = await self.hass.async_add_executor_job(self.client.read)
+        except RateLimited as err:
+            self.update_interval = RATE_LIMIT_PAUSE
+            raise UpdateFailed(
+                f"FusionSolar asks to slow down ({err}); next try in {RATE_LIMIT_PAUSE}"
+            ) from err
         except CaptchaRequired as err:
             raise ConfigEntryAuthFailed(
                 "FusionSolar asks for a captcha. Log in once in a browser, wait some "
@@ -53,6 +63,8 @@ class SChargerCoordinator(DataUpdateCoordinator[ChargerReading]):
             raise UpdateFailed("No SCharger found in the selected plant") from err
         except PortalError as err:
             raise UpdateFailed(f"FusionSolar request failed: {err}") from err
+        self.update_interval = self._normal_interval
+        return reading
 
     async def async_write_setting(self, signal_id: int, value: str) -> None:
         """Write a setting, then poll so the value is read back from the portal."""
