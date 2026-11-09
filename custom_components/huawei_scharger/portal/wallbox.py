@@ -12,6 +12,7 @@ from typing import Any, Callable, TypeVar
 from . import endpoints as ep
 from .errors import BadCredentials, CaptchaRequired, ChargerNotFound, PortalError, SessionInvalid
 from .login import PortalSession
+from .redact import redact, remember
 from .readings import (
     ChargerReading,
     PendingWrite,
@@ -59,6 +60,7 @@ class SChargerClient:
     def __init__(self, session: PortalSession, station_dn: str, *, plant_figures: bool = True) -> None:
         self.session = session
         self.station_dn = station_dn
+        remember(station_dn)
         self.wallbox: TreeNode | None = None
         self.connector: TreeNode | None = None
         self._connector_next_try = 0.0
@@ -120,10 +122,12 @@ class SChargerClient:
             if not boxes:
                 raise ChargerNotFound("no SCharger in this plant")
             self.wallbox = boxes[0]
+            remember(self.wallbox.dn)
         if self.connector is None and time.monotonic() >= self._connector_next_try:
             plugs = self._children(self.wallbox.dn, ep.MOC_CONNECTOR)
             if plugs:
                 self.connector = plugs[0]
+                remember(self.connector.dn)
             else:
                 self._connector_next_try = time.monotonic() + CONNECTOR_RETRY
 
@@ -202,14 +206,14 @@ class SChargerClient:
             except SessionInvalid:
                 raise
             except PortalError as err:
-                _LOGGER.debug("Energy fallback not available: %s", err)
+                _LOGGER.debug("Energy fallback not available: %s", redact(err))
 
         try:
             self._load_settings()
         except SessionInvalid:
             raise
         except PortalError as err:
-            _LOGGER.debug("Settings not readable, keeping previous values: %s", err)
+            _LOGGER.debug("Settings not readable, keeping previous values: %s", redact(err))
         settings = apply_pending(
             self._settings, self._pending, self._settings_at, time.monotonic(), CONFIRM_TIMEOUT
         )
@@ -223,7 +227,7 @@ class SChargerClient:
         except SessionInvalid:
             raise
         except PortalError as err:
-            _LOGGER.debug("Plant figures not readable: %s", err)
+            _LOGGER.debug("Plant figures not readable: %s", redact(err))
             reading.plant = self._plant
         return reading
 

@@ -19,6 +19,7 @@ from .portal import (
     PortalError,
     RateLimited,
     SChargerClient,
+    redact,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,7 +51,7 @@ class SChargerCoordinator(DataUpdateCoordinator[ChargerReading]):
         except RateLimited as err:
             self.update_interval = RATE_LIMIT_PAUSE
             raise UpdateFailed(
-                f"FusionSolar asks to slow down ({err}); next try in {RATE_LIMIT_PAUSE}"
+                f"FusionSolar asks to slow down ({redact(err)}); next try in {RATE_LIMIT_PAUSE}"
             ) from err
         except CaptchaRequired as err:
             raise ConfigEntryAuthFailed(
@@ -62,7 +63,7 @@ class SChargerCoordinator(DataUpdateCoordinator[ChargerReading]):
         except ChargerNotFound as err:
             raise UpdateFailed("No SCharger found in the selected plant") from err
         except PortalError as err:
-            raise UpdateFailed(f"FusionSolar request failed: {err}") from err
+            raise UpdateFailed(f"FusionSolar request failed: {redact(err)}") from err
         self.update_interval = self._normal_interval
         return reading
 
@@ -72,9 +73,9 @@ class SChargerCoordinator(DataUpdateCoordinator[ChargerReading]):
             accepted = await self.hass.async_add_executor_job(self.client.write_setting, signal_id, value)
         except (BadCredentials, CaptchaRequired) as err:
             self.config_entry.async_start_reauth(self.hass)
-            raise HomeAssistantError(f"FusionSolar login failed: {err}") from err
+            raise HomeAssistantError(f"FusionSolar login failed: {redact(err)}") from err
         except (PortalError, ValueError) as err:
-            raise HomeAssistantError(f"Changing the wallbox setting failed: {err}") from err
+            raise HomeAssistantError(f"Changing the wallbox setting failed: {redact(err)}") from err
         if not accepted:
             raise HomeAssistantError("FusionSolar did not accept the change")
         await self.async_refresh()

@@ -11,6 +11,7 @@ from .errors import (
     UnexpectedPayload,
 )
 from .login import PortalSession, normalize_host
+from .redact import describe, redact, remember
 from .readings import ChargerReading, PlantFigures, Setting, compose_reading
 from .wallbox import SChargerClient
 
@@ -29,5 +30,8 @@ __all__ = [
     "SessionInvalid",
     "UnexpectedPayload",
     "compose_reading",
+    "describe",
     "normalize_host",
+    "redact",
+    "remember",
 ]

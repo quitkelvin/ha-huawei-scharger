@@ -42,6 +42,7 @@ from .portal import (
     PortalError,
     PortalSession,
     SChargerClient,
+    describe,
     normalize_host,
 )
 
@@ -97,7 +98,7 @@ class SChargerConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.hass.async_add_executor_job(_has_charger, self._session, station["dn"])
         except Exception as err:  # noqa: BLE001
             if not isinstance(err, PortalError):
-                _LOGGER.exception("Unexpected error while looking for the wallbox")
+                _LOGGER.error("Unexpected error while looking for the wallbox: %s", describe(err))
             return _error_key(err)
         return None
 
@@ -121,7 +122,7 @@ class SChargerConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except Exception as err:  # noqa: BLE001
                 if not isinstance(err, PortalError):
-                    _LOGGER.exception("Unexpected error during login")
+                    _LOGGER.error("Unexpected error during login: %s", describe(err))
                 errors["base"] = _error_key(err)
             else:
                 self._input = user_input
@@ -170,7 +171,7 @@ class SChargerConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.hass.async_add_executor_job(session.close)
             except Exception as err:  # noqa: BLE001
                 if not isinstance(err, PortalError):
-                    _LOGGER.exception("Unexpected error during re-authentication")
+                    _LOGGER.error("Unexpected error during re-authentication: %s", describe(err))
                 errors["base"] = _error_key(err)
             else:
                 return self.async_update_reload_and_abort(entry, data=data)

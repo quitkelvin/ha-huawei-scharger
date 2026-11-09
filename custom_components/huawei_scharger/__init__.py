@@ -15,6 +15,7 @@ from .portal import (
     PortalError,
     PortalSession,
     SChargerClient,
+    redact,
 )
 
 type SChargerConfigEntry = ConfigEntry[SChargerCoordinator]
@@ -31,9 +32,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SChargerConfigEntry) -> 
     try:
         await hass.async_add_executor_job(client.locate)
     except (BadCredentials, CaptchaRequired) as err:
-        raise ConfigEntryAuthFailed(str(err)) from err
+        raise ConfigEntryAuthFailed(redact(err)) from err
     except PortalError as err:
-        raise ConfigEntryNotReady(str(err)) from err
+        raise ConfigEntryNotReady(redact(err)) from err
 
     coordinator = SChargerCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()

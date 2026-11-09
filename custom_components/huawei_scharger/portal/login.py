@@ -25,6 +25,7 @@ from urllib.parse import quote, urlparse
 import requests
 
 from . import endpoints as ep
+from .redact import redact, remember
 from .errors import (
     BadCredentials,
     CaptchaRequired,
@@ -92,6 +93,7 @@ class PortalSession:
         self._login_at: float | None = None
         self._lock = threading.RLock()
         self._http = self._new_http()
+        remember(username, password)
 
     # ------------------------------------------------------------------ basics
     @staticmethod
@@ -133,7 +135,7 @@ class PortalSession:
                 else:
                     self._login_eu5()
             except requests.RequestException as err:
-                raise PortalUnreachable(f"login request failed: {err}") from err
+                raise PortalUnreachable(f"login request failed: {err.__class__.__name__}") from err
             self.logged_in = True
             self.csrf_token()
 
@@ -149,7 +151,7 @@ class PortalSession:
         try:
             self._http.get(page_with_service, timeout=_TIMEOUT)
         except requests.RequestException as err:
-            _LOGGER.debug("Pre-loading login page failed: %s", err)
+            _LOGGER.debug("Pre-loading login page failed: %s", err.__class__.__name__)
 
         resp = self._http.get(
             f"https://{host}{ep.PATH_PUBKEY}",
@@ -308,6 +310,7 @@ class PortalSession:
             if not token:
                 self.logged_in = False
                 raise SessionInvalid("keep-alive returned no token")
+            remember(token)
             self._csrf, self._csrf_at = token, time.monotonic()
             return token
 
@@ -332,7 +335,9 @@ class PortalSession:
         rows = data.get("list") if isinstance(data, dict) else None
         if not isinstance(rows, list):
             raise UnexpectedPayload("station list without data.list")
-        return [
+        stations = [
             {"dn": str(row["dn"]), "name": str(row.get("name") or row.get("stationName") or row["dn"])}
             for row in rows if isinstance(row, dict) and row.get("dn")
         ]
+        remember(*(station["dn"] for station in stations))
+        return stations
